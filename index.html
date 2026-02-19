@@ -1,0 +1,1196 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>읽기 훈련</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600&family=IBM+Plex+Mono:wght@400;600&display=swap');
+:root{
+  --bg:#0e0e11;--sf:#16161b;--sf2:#1e1e26;--bd:#2c2c3a;
+  --tx:#dddbe8;--dim:#6a6878;--ac:#a78bfa;--ac-dim:#3d2f7a;
+  --green:#6ee7b7;--red:#f87171;--yellow:#fbbf24;--orange:#fb923c;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100dvh;overflow:hidden;background:var(--bg);color:var(--tx);font-family:'Noto Serif KR',serif}
+.screen{display:none;flex-direction:column;height:100dvh}.screen.active{display:flex}
+
+/* COMMON */
+.card{background:var(--sf);border:1px solid var(--bd);border-radius:14px;padding:18px;margin-bottom:14px}
+.card-title{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:3px;color:var(--dim);text-transform:uppercase;margin-bottom:12px}
+.fl{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--dim);text-transform:uppercase;margin-bottom:6px}
+.fw{margin-bottom:12px}
+.row2{display:flex;gap:10px}.row2 .fw{flex:1}
+input[type=text],input[type=password],input[type=number],textarea,select{
+  width:100%;background:var(--sf2);border:1px solid var(--bd);color:var(--tx);
+  padding:10px 12px;border-radius:10px;font-size:13px;outline:none;transition:border-color .15s;
+  font-family:'IBM Plex Mono',monospace}
+input:focus,textarea:focus,select:focus{border-color:var(--ac)}
+textarea{resize:vertical;min-height:68px;line-height:1.5;font-family:'Noto Serif KR',serif;font-size:13px}
+select{appearance:none;-webkit-appearance:none;cursor:pointer}
+.tabs{display:flex;gap:6px}
+.tab{flex:1;padding:8px 4px;border:1.5px solid var(--bd);border-radius:8px;background:none;color:var(--dim);
+  font-family:'IBM Plex Mono',monospace;font-size:11px;cursor:pointer;text-align:center;transition:all .15s}
+.tab.active{border-color:var(--ac);color:var(--ac);background:var(--ac-dim)}
+.btn-p{width:100%;background:var(--ac);color:#08061a;border:none;padding:15px;border-radius:12px;
+  font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:700;letter-spacing:1px;cursor:pointer;transition:opacity .2s,transform .1s}
+.btn-p:active{transform:scale(.98);opacity:.85}.btn-p:disabled{opacity:.35;cursor:not-allowed}
+.btn-g{background:none;border:1px solid var(--bd);color:var(--dim);padding:7px 14px;border-radius:8px;
+  font-family:'IBM Plex Mono',monospace;font-size:11px;cursor:pointer;transition:all .15s}
+.btn-g:hover{border-color:var(--ac);color:var(--ac)}
+.btn-ic{background:none;border:none;color:var(--dim);cursor:pointer;padding:4px 8px;font-size:15px;line-height:1}
+.sd{font-size:12px;color:var(--dim);line-height:1.5;margin-top:4px}
+.nst{display:flex;align-items:center;gap:6px}
+.nb{background:var(--sf2);border:1px solid var(--bd);color:var(--tx);width:32px;height:32px;
+  border-radius:8px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center}
+.nv{font-family:'IBM Plex Mono',monospace;font-size:15px;color:var(--ac);min-width:40px;text-align:center}
+.ml{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+.mc{display:flex;align-items:center;background:var(--sf2);border:1px solid var(--bd);border-radius:8px;padding:8px 12px;gap:8px}
+.mc-n{font-family:'IBM Plex Mono',monospace;font-size:12px;flex:1}
+.cb{background:none;border:none;color:var(--dim);cursor:pointer;font-size:13px;padding:2px 6px;border-radius:4px}
+.cb:hover{color:var(--red)}
+.ar{display:flex;gap:8px}.ar input{flex:1}
+.ab{background:var(--sf2);border:1px solid var(--ac);color:var(--ac);padding:8px 14px;
+  border-radius:8px;font-family:'IBM Plex Mono',monospace;font-size:12px;cursor:pointer;white-space:nowrap}
+
+/* AUTH BAR */
+.auth-bar{display:flex;align-items:center;justify-content:flex-end;gap:10px;
+  padding:8px 22px;background:var(--sf);border-bottom:1px solid var(--bd);flex-shrink:0}
+.auth-info{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--dim);flex:1}
+.auth-info span{color:var(--ac)}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:var(--bd);flex-shrink:0;transition:background .3s}
+.sync-dot.ok{background:var(--green)}.sync-dot.busy{background:var(--yellow);animation:pulse2 1s infinite}
+.sync-dot.err{background:var(--red)}
+@keyframes pulse2{0%,100%{opacity:.4}50%{opacity:1}}
+.auth-btn{background:none;border:1px solid var(--bd);color:var(--dim);padding:5px 12px;
+  border-radius:8px;font-family:'IBM Plex Mono',monospace;font-size:11px;cursor:pointer;transition:all .15s;white-space:nowrap}
+.auth-btn:hover{border-color:var(--ac);color:var(--ac)}
+.auth-btn.login{border-color:var(--ac);color:var(--ac)}
+
+/* HOME */
+#home{overflow-y:auto}
+.hh{padding:28px 22px 0;background:radial-gradient(ellipse 90% 60% at 50% 0%,#1a1040 0%,var(--bg) 70%);flex-shrink:0}
+.eyebrow{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:4px;color:var(--ac);text-transform:uppercase;margin-bottom:8px}
+.ht{font-size:23px;font-weight:600;margin-bottom:16px}
+.hn{display:flex;border-bottom:1px solid var(--bd);margin:0 -22px;padding:0 22px}
+.hnb{flex:1;padding:10px 2px;background:none;border:none;color:var(--dim);font-family:'IBM Plex Mono',monospace;
+  font-size:10px;cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;text-align:center}
+.hnb.active{color:var(--ac);border-bottom-color:var(--ac)}
+.htab{display:none;padding:16px 22px 32px;flex-direction:column}
+.htab.active{display:flex}
+
+/* 라이브러리 */
+.fs{margin-bottom:14px}
+.fhd{display:flex;align-items:center;gap:8px;padding:10px 12px;
+  background:var(--sf2);border:1px solid var(--bd);border-radius:10px;cursor:pointer;margin-bottom:5px;user-select:none}
+.fch{font-size:10px;color:var(--dim);transition:transform .2s;flex-shrink:0}
+.fch.open{transform:rotate(90deg)}
+.flb{font-size:14px;font-weight:600;flex:1}
+.fmeta{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--dim);flex-shrink:0}
+.fb{display:none;padding-left:8px}.fb.open{display:block}
+.wi{display:flex;align-items:center;gap:8px;background:var(--sf2);border:1px solid var(--bd);
+  border-radius:10px;padding:11px 12px;cursor:pointer;transition:border-color .15s;margin-bottom:5px}
+.wi:hover{border-color:var(--ac)}
+.wi-info{flex:1;min-width:0}
+.wi-name{font-size:14px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wi-meta{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--dim)}
+.wa{display:flex;gap:3px;flex-shrink:0;align-items:center}
+.wbtn{background:none;border:none;cursor:pointer;font-size:13px;color:var(--dim);padding:5px 6px;border-radius:6px}
+.wbtn:hover{color:var(--tx)}.wbtn.del:hover{color:var(--red)}
+.wbtn.st{background:var(--ac);color:#08061a;font-size:11px;padding:6px 11px;
+  border-radius:7px;font-family:'IBM Plex Mono',monospace;font-weight:600;border:none;cursor:pointer}
+.es{text-align:center;color:var(--dim);font-size:13px;padding:18px 0;line-height:1.7}
+
+/* LOADING */
+#loading{align-items:center;justify-content:center;gap:20px;text-align:center;padding:40px}
+.sp{width:44px;height:44px;border:3px solid var(--bd);border-top-color:var(--ac);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.lt{color:var(--dim);font-size:14px;line-height:1.6}
+.ld{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ac)}
+
+/* WB DETAIL */
+#wbDetail{overflow-y:auto}
+.dh{display:flex;align-items:center;gap:8px;padding:14px 16px;border-bottom:1px solid var(--bd);flex-shrink:0}
+.dt{font-size:16px;font-weight:600;flex:1}
+.sc{background:var(--sf2);border:1px solid var(--bd);border-radius:10px;padding:12px 14px;margin-bottom:7px}
+.scn{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--dim);margin-bottom:3px}
+.sct{font-size:14px;line-height:1.6;margin-bottom:5px}
+.scq{font-size:12px;color:var(--ac);font-family:'IBM Plex Mono',monospace}
+
+/* TRAINING */
+#training{overflow:hidden}
+.th{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--bd);flex-shrink:0}
+.tl{display:flex;flex-direction:column;gap:3px}
+.tm{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--dim)}
+.tm span{color:var(--ac)}
+.sd-row{display:flex;gap:4px;align-items:center}
+.sdot{width:7px;height:7px;border-radius:50%;background:var(--bd);transition:background .2s}
+.sdot.hit{background:var(--green)}.sdot.miss{background:var(--red)}
+.pb{height:2px;background:var(--bd);flex-shrink:0}
+.pf{height:100%;background:var(--ac);transition:width .4s;width:0%}
+
+/* 페이딩 영역 */
+.fa{flex:1;display:flex;align-items:center;justify-content:center;padding:24px 20px;overflow:hidden;position:relative}
+.sw{width:100%;max-width:600px;display:flex;flex-direction:column;align-items:center}
+.st{font-size:19px;line-height:1.9;text-align:center;width:100%;word-break:keep-all;white-space:normal;overflow-wrap:break-word}
+.ul{height:2px;border-radius:1px;margin-top:8px;background:var(--ac);opacity:0;transition:opacity .3s;width:60%}
+.ul.waiting{opacity:.35}.ul.active{opacity:.5}
+.do{position:absolute;bottom:calc(50% - 40px);left:50%;transform:translateX(-50%);
+  width:9px;height:9px;border-radius:50%;background:var(--ac);opacity:0}
+.do.show{opacity:.6;animation:pulse 1s ease-in-out infinite}
+@keyframes pulse{0%,100%{transform:scale(1);opacity:.35}50%{transform:scale(1.7);opacity:.85}}
+.tok{display:inline;transition:opacity .1s ease-out}
+.tok.going{opacity:.07;color:var(--ac)}.tok.gone{opacity:0}
+
+.tf{flex-shrink:0;padding:10px 14px 18px;border-top:1px solid var(--bd)}
+.tf-top{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:8px}
+.spd-btn{background:var(--sf2);border:1px solid var(--bd);color:var(--tx);padding:8px 16px;
+  border-radius:8px;font-family:'IBM Plex Mono',monospace;font-size:12px;cursor:pointer;transition:all .15s}
+.spd-btn:hover{border-color:var(--ac);color:var(--ac)}
+.spd-val{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--ac);min-width:70px;text-align:center}
+.nxbtn{width:100%;background:var(--sf);border:1.5px solid var(--green);color:var(--green);
+  padding:13px;border-radius:12px;font-family:'IBM Plex Mono',monospace;font-size:13px;
+  cursor:pointer;text-align:center;transition:background .15s}
+.nxbtn:active{background:#0d2218}.nxbtn:disabled{opacity:.3;cursor:not-allowed}
+
+/* QUESTION */
+#question{overflow:hidden}
+.qh{padding:14px 18px 10px;border-bottom:1px solid var(--bd);flex-shrink:0;text-align:center}
+.ql{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--ac);text-transform:uppercase;margin-bottom:6px}
+.qsr{font-size:13px;line-height:1.5;color:var(--dim);font-style:italic}
+.qb{flex:1;padding:16px 18px;display:flex;flex-direction:column;gap:8px;overflow-y:auto;align-items:center}
+.qt{font-size:16px;line-height:1.55;font-weight:600;text-align:center;width:100%;max-width:560px}
+.ow{width:100%;max-width:560px;display:flex;flex-direction:column;gap:8px}
+.ob{width:100%;background:var(--sf);border:1.5px solid var(--bd);color:var(--tx);
+  padding:12px 15px;border-radius:10px;font-family:'Noto Serif KR',serif;font-size:14px;
+  text-align:center;cursor:pointer;transition:all .15s;line-height:1.4}
+.ob:hover:not(:disabled){border-color:var(--ac)}
+.ob.correct{background:#0d2218;border-color:var(--green);color:var(--green)}
+.ob.wrong{background:#220d0d;border-color:var(--red);color:var(--red)}
+.ob:disabled{cursor:default}
+.skip-wrap{width:100%;max-width:560px}
+.skip-btn{width:100%;background:none;border:1.5px solid var(--bd);color:var(--dim);
+  padding:10px;border-radius:10px;font-family:'IBM Plex Mono',monospace;font-size:11px;
+  cursor:pointer;text-align:center;transition:all .15s;letter-spacing:1px}
+.skip-btn:hover:not(:disabled){border-color:var(--yellow);color:var(--yellow)}
+.skip-btn:disabled{opacity:.3;cursor:default}
+.qfb{margin-top:2px;padding:9px 12px;border-radius:9px;font-family:'IBM Plex Mono',monospace;
+  font-size:12px;display:none;width:100%;max-width:560px;text-align:center}
+.qfb.show{display:block}
+.qfb.ok{background:#0d2218;color:var(--green)}.qfb.ng{background:#220d0d;color:var(--red)}
+.qfb.sk{background:#1a160a;color:var(--yellow)}
+.qft{padding:10px 18px 22px;flex-shrink:0}
+.qnb{width:100%;background:var(--ac);color:#08061a;border:none;padding:14px;border-radius:12px;
+  font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:700;cursor:pointer;display:none;text-align:center}
+.qnb.show{display:block}
+
+/* RESULT */
+#result{align-items:center;justify-content:center;gap:20px;padding:36px 22px;
+  background:radial-gradient(ellipse 60% 50% at 50% 75%,#0d2218 0%,var(--bg) 65%)}
+.re{font-size:52px}.rh{font-size:22px;font-weight:600;text-align:center}
+.sg{width:100%;max-width:340px;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.sc2{background:var(--sf);border:1px solid var(--bd);border-radius:12px;padding:13px;text-align:center}
+.sv{font-family:'IBM Plex Mono',monospace;font-size:19px;color:var(--ac);margin-bottom:3px}
+.sl{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--dim);text-transform:uppercase}
+.rb{display:flex;flex-direction:column;gap:8px;width:100%;max-width:340px}
+.rbtn{padding:13px;border-radius:12px;font-family:'IBM Plex Mono',monospace;font-size:12px;
+  cursor:pointer;text-align:center;border:none;letter-spacing:1px}
+.rbtn.pr{background:var(--ac);color:#08061a;font-weight:700}
+.rbtn.se{background:var(--sf);border:1px solid var(--bd);color:var(--dim)}
+
+/* toast */
+.toast{position:fixed;bottom:76px;left:50%;transform:translateX(-50%);
+  background:var(--sf2);border:1px solid var(--bd);color:var(--tx);
+  padding:8px 16px;border-radius:16px;font-family:'IBM Plex Mono',monospace;font-size:11px;
+  opacity:0;pointer-events:none;transition:opacity .25s;white-space:nowrap;z-index:200}
+.toast.show{opacity:1}
+.toast.up{color:var(--green);border-color:var(--green)}
+.toast.dn{color:var(--red);border-color:var(--red)}
+
+/* modal */
+.mbg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:300;align-items:flex-end}
+.mbg.show{display:flex}
+.md{background:var(--sf);border:1px solid var(--bd);border-radius:18px 18px 0 0;
+  width:100%;padding:22px 20px 34px;display:flex;flex-direction:column;gap:12px;max-height:80dvh;overflow-y:auto}
+.md h3{font-size:15px;font-weight:600}
+.md p{font-size:13px;color:var(--dim);line-height:1.5}
+.mdb{display:flex;gap:8px;margin-top:2px}
+.mdb button{flex:1;padding:12px;border-radius:10px;font-family:'IBM Plex Mono',monospace;font-size:12px;cursor:pointer;border:none;font-weight:600}
+.m-ok{background:var(--ac);color:#08061a}
+.m-del{background:#3a1212;color:var(--red);border:1px solid var(--red)!important}
+.m-cancel{background:var(--sf2);color:var(--dim)}
+</style>
+</head>
+<body>
+
+<!-- ══ HOME ══ -->
+<div id="home" class="screen active">
+
+  <!-- 인증 바 -->
+  <div class="auth-bar">
+    <div class="auth-info" id="authInfo">로그인하면 데이터가 클라우드에 저장됩니다</div>
+    <div class="sync-dot" id="syncDot" title="동기화 상태"></div>
+    <button class="auth-btn login" id="authBtn">Google 로그인</button>
+  </div>
+
+  <div class="hh">
+    <div class="eyebrow">Text Fading Trainer</div>
+    <div class="ht">읽기 유창성 훈련</div>
+    <div class="hn">
+      <button class="hnb active" data-nav="lib">📚 라이브러리</button>
+      <button class="hnb" data-nav="new">✦ 새 생성</button>
+      <button class="hnb" data-nav="imp">📂 불러오기</button>
+      <button class="hnb" data-nav="cfg">⚙ 설정</button>
+    </div>
+  </div>
+
+  <div class="htab active" id="tab-lib"><div id="libRoot"></div></div>
+
+  <!-- 새 생성 -->
+  <div class="htab" id="tab-new">
+    <div class="card">
+      <div class="card-title">AI 제공자 / 모델</div>
+      <div class="tabs" style="margin-bottom:11px">
+        <button class="tab active" data-p="openai">OpenAI</button>
+        <button class="tab" data-p="gemini">Gemini</button>
+      </div>
+      <div class="fw"><div class="fl">모델</div><select id="modelSelect"></select></div>
+      <div class="fw"><div class="fl">API 키</div><input type="password" id="apiKey" placeholder="sk-..." autocomplete="off"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">세션 설정</div>
+      <div class="row2">
+        <div class="fw"><div class="fl">폴더</div><select id="folderSelect"></select></div>
+        <div class="fw" style="max-width:85px"><div class="fl">지문 수</div><input type="number" id="count" value="15" min="3" max="50"></div>
+      </div>
+      <div class="fw"><div class="fl">주제</div><input type="text" id="topic" placeholder="예: LEET 논리추론, 법철학, 과학"></div>
+      <div class="fl" style="margin-bottom:7px">지문 글자 수 범위</div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
+        <input type="number" id="charMin" value="30" min="10" max="500" style="max-width:80px">
+        <span style="color:var(--dim);font-size:13px">—</span>
+        <input type="number" id="charMax" value="80" min="10" max="500" style="max-width:80px">
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--dim)">자</span>
+      </div>
+      <div class="sd" style="margin-bottom:12px">초급 15-30자 · 중급 30-80자 · LEET형 80-200자</div>
+      <div class="fl" style="margin-bottom:6px;display:flex;align-items:center;justify-content:space-between">
+        추가 프롬프트 <span style="color:var(--dim);font-size:9px">(선택)</span>
+        <div style="display:flex;gap:6px">
+          <button class="ab" style="padding:4px 10px;font-size:10px" id="savePromptBtn">저장</button>
+          <button class="ab" style="padding:4px 10px;font-size:10px;border-color:var(--dim);color:var(--dim)" id="loadPromptBtn">불러오기</button>
+        </div>
+      </div>
+      <textarea id="extraPrompt" placeholder="예: LEET 언어이해 스타일. 논리적 추론이 필요한 질문."></textarea>
+      <div class="fw" style="margin-bottom:0;margin-top:11px"><div class="fl">문제집 이름</div><input type="text" id="wbName" placeholder="예: LEET 논리추론 15문"></div>
+    </div>
+    <button class="btn-p" id="generateBtn">AI 문장 생성 후 저장 →</button>
+    <div style="height:32px"></div>
+  </div>
+
+  <!-- JSON 불러오기 -->
+  <div class="htab" id="tab-imp">
+    <div class="card">
+      <div class="card-title">JSON 파일 불러오기</div>
+      <p style="font-size:13px;color:var(--dim);line-height:1.7;margin-bottom:12px">아래 형식의 JSON 파일을 불러와 문제집으로 저장합니다.</p>
+      <pre style="background:var(--sf2);border:1px solid var(--bd);border-radius:8px;padding:12px;font-size:11px;font-family:'IBM Plex Mono',monospace;color:var(--dim);overflow-x:auto;margin-bottom:12px;white-space:pre-wrap">[{"text":"지문","question":"질문?","options":["①","②","③","④"],"answer":0}]</pre>
+      <div class="fw"><div class="fl">폴더</div><select id="impFolderSelect"></select></div>
+      <div class="fw"><div class="fl">문제집 이름</div><input type="text" id="impWbName" placeholder="불러온 문제집 이름"></div>
+      <div style="display:flex;gap:8px">
+        <button class="btn-p" id="importFileBtn" style="flex:1">📂 파일 선택</button>
+        <button class="btn-p" id="importPasteBtn" style="flex:1;background:var(--sf2);color:var(--tx);border:1px solid var(--bd)">📋 붙여넣기</button>
+      </div>
+      <input type="file" id="fileInput" accept=".json" style="display:none">
+    </div>
+    <div class="card" style="display:none" id="impPreviewCard">
+      <div class="card-title">미리보기</div>
+      <div id="impPreview"></div>
+      <button class="btn-p" id="impSaveBtn" style="margin-top:4px">이 문제집 저장 →</button>
+    </div>
+    <div style="height:32px"></div>
+  </div>
+
+  <!-- 설정 -->
+  <div class="htab" id="tab-cfg">
+    <div class="card">
+      <div class="card-title">훈련 속도 모드</div>
+      <div class="tabs" id="speedModeTabs" style="margin-bottom:10px">
+        <button class="tab active" data-sm="adaptive">적응형</button>
+        <button class="tab" data-sm="manual">수동</button>
+      </div>
+      <div class="sd" id="speedModeDesc">정답/오답 연속에 따라 자동으로 속도를 조절합니다</div>
+    </div>
+    <div class="card" id="adaptiveCard">
+      <div class="card-title">적응형 속도 조절</div>
+      <div class="fw"><div class="fl">연속 정답 → 속도 상승</div>
+        <div class="nst"><button class="nb" data-cfg="streakUp" data-d="-1" data-min="1" data-max="10">−</button><div class="nv" id="val-streakUp">4</div><button class="nb" data-cfg="streakUp" data-d="1" data-min="1" data-max="10">+</button><span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--dim);margin-left:4px">연속</span></div>
+      </div>
+      <div class="fw" style="margin-bottom:0"><div class="fl">연속 오답 → 속도 하락</div>
+        <div class="nst"><button class="nb" data-cfg="streakDown" data-d="-1" data-min="1" data-max="10">−</button><div class="nv" id="val-streakDown">4</div><button class="nb" data-cfg="streakDown" data-d="1" data-min="1" data-max="10">+</button><span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--dim);margin-left:4px">연속</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">속도 설정</div>
+      <div class="fw"><div class="fl">시작 속도</div>
+        <div class="nst"><button class="nb" data-cfg="initSpeed" data-d="-5" data-min="20" data-max="400">−</button><div class="nv" id="val-initSpeed">90</div><button class="nb" data-cfg="initSpeed" data-d="5" data-min="20" data-max="400">+</button><span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--dim);margin-left:4px">ms/글자</span></div>
+        <div class="sd">낮을수록 빠름. 초급 120 · 중급 90 · 고급 60</div>
+      </div>
+      <div class="fw" style="margin-bottom:0"><div class="fl">속도 변화량</div>
+        <div class="nst"><button class="nb" data-cfg="speedStep" data-d="-1" data-min="1" data-max="50">−</button><div class="nv" id="val-speedStep">10</div><button class="nb" data-cfg="speedStep" data-d="1" data-min="1" data-max="50">+</button><span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--dim);margin-left:4px">%</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">타이밍 설정</div>
+      <div class="fw"><div class="fl">페이딩 시작 대기</div>
+        <div class="nst"><button class="nb" data-cfg="preFadeDelay" data-d="-50" data-min="0" data-max="2000">−</button><div class="nv" id="val-preFadeDelay">300</div><button class="nb" data-cfg="preFadeDelay" data-d="50" data-min="0" data-max="2000">+</button><span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--dim);margin-left:4px">ms</span></div>
+      </div>
+      <div class="fw" style="margin-bottom:0"><div class="fl">문제 후 다음 지문 딜레이</div>
+        <div class="nst"><button class="nb" data-cfg="interDelay" data-d="-100" data-min="0" data-max="3000">−</button><div class="nv" id="val-interDelay">800</div><button class="nb" data-cfg="interDelay" data-d="100" data-min="0" data-max="3000">+</button><span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--dim);margin-left:4px">ms</span></div>
+      </div>
+    </div>
+    <div class="card"><div class="card-title">OpenAI 모델</div>
+      <div class="ml" id="openaiModelList"></div>
+      <div class="ar"><input type="text" id="addOpenaiModel" placeholder="모델명 직접 입력"><button class="ab" data-provider="openai">+ 추가</button></div>
+    </div>
+    <div class="card"><div class="card-title">Gemini 모델</div>
+      <div class="ml" id="geminiModelList"></div>
+      <div class="ar"><input type="text" id="addGeminiModel" placeholder="모델명 직접 입력"><button class="ab" data-provider="gemini">+ 추가</button></div>
+    </div>
+    <div class="card"><div class="card-title">폴더 관리</div>
+      <div id="folderMgr"></div>
+      <div class="ar" style="margin-top:8px"><input type="text" id="newFolderName" placeholder="새 폴더 이름"><button class="ab" id="addFolderBtn">+ 추가</button></div>
+    </div>
+    <div style="height:32px"></div>
+  </div>
+</div>
+
+<!-- ══ LOADING ══ -->
+<div id="loading" class="screen">
+  <div class="sp"></div>
+  <div class="lt">AI가 문장과 질문을 생성 중입니다.<br>잠시 기다려주세요.</div>
+  <div class="ld" id="loadDetail">API 요청 전송 중...</div>
+</div>
+
+<!-- ══ WB DETAIL ══ -->
+<div id="wbDetail" class="screen">
+  <div class="dh">
+    <button class="btn-g" id="wbBackBtn">← 뒤로</button>
+    <div class="dt" id="wbDetailTitle"></div>
+    <button class="btn-ic" id="wbRenameBtn">✏️</button>
+    <button class="btn-ic" id="wbDeleteBtn">🗑</button>
+  </div>
+  <div style="padding:12px 16px;flex:1;overflow-y:auto"><div id="wbSentList"></div></div>
+  <div style="padding:0 16px 24px;flex-shrink:0"><button class="btn-p" id="wbStartBtn">이 문제집으로 훈련 시작 →</button></div>
+</div>
+
+<!-- ══ TRAINING ══ -->
+<div id="training" class="screen">
+  <div class="th">
+    <div class="tl">
+      <div class="tm"><span id="trIdx">0</span>/<span id="trTotal">0</span> · <span id="trSpd">-</span>ms/글자 · 정답 <span id="trAcc">-</span>%</div>
+      <div class="sd-row" id="streakDots"></div>
+    </div>
+    <button class="btn-g" id="exitBtn">종료</button>
+  </div>
+  <div class="pb"><div class="pf" id="progFill"></div></div>
+  <div class="fa">
+    <div class="sw">
+      <div class="st" id="sentText"></div>
+      <div class="ul" id="sentUl"></div>
+    </div>
+    <div class="do" id="delayDot"></div>
+  </div>
+  <div class="tf">
+    <div class="tf-top" id="manualSpeedRow" style="display:none">
+      <button class="spd-btn" id="spdSlower">↓ 느리게</button>
+      <div class="spd-val" id="spdDisplay">90ms</div>
+      <button class="spd-btn" id="spdFaster">↑ 빠르게</button>
+    </div>
+    <button class="nxbtn" id="nextBtn">다 읽었습니다 →</button>
+  </div>
+</div>
+
+<!-- ══ QUESTION ══ -->
+<div id="question" class="screen">
+  <div class="qh">
+    <div class="ql">이해도 확인</div>
+    <div class="qsr" id="qSentRef"></div>
+  </div>
+  <div class="qb">
+    <div class="qt" id="qText"></div>
+    <div class="ow">
+      <button class="ob" id="opt0"></button><button class="ob" id="opt1"></button>
+      <button class="ob" id="opt2"></button><button class="ob" id="opt3"></button>
+    </div>
+    <div class="skip-wrap"><button class="skip-btn" id="skipBtn">모름 / 건너뜀</button></div>
+    <div class="qfb" id="qFeedback"></div>
+  </div>
+  <div class="qft"><button class="qnb" id="qNextBtn">다음 문장</button></div>
+</div>
+
+<!-- ══ RESULT ══ -->
+<div id="result" class="screen">
+  <div class="re" id="rEmoji">✦</div>
+  <div class="rh">세션 완료!</div>
+  <div class="sg">
+    <div class="sc2"><div class="sv" id="rSent">0</div><div class="sl">완료 문장</div></div>
+    <div class="sc2"><div class="sv" id="rAcc">0%</div><div class="sl">정답률</div></div>
+    <div class="sc2"><div class="sv" id="rSpeed">0ms</div><div class="sl">최종 속도</div></div>
+    <div class="sc2"><div class="sv" id="rChange">-</div><div class="sl">속도 변화</div></div>
+  </div>
+  <div class="rb">
+    <button class="rbtn pr" id="retryBtn">같은 세트 다시</button>
+    <button class="rbtn se" id="homeBtn">홈으로</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="mbg" id="modalBg">
+  <div class="md">
+    <h3 id="mTitle"></h3>
+    <p id="mDesc" style="display:none"></p>
+    <input type="text" id="mInput" style="display:none">
+    <textarea id="mTextarea" style="display:none;min-height:160px"></textarea>
+    <div class="mdb" id="mBtns"></div>
+  </div>
+</div>
+
+<!-- ══ Firebase SDK (modular) ══ -->
+<script type="module">
+import { initializeApp }           from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
+                                    from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+import { getFirestore, collection, doc, getDocs, setDoc, deleteDoc, updateDoc, query, orderBy }
+                                    from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+
+// ════════════════════════════════════════════════
+//  ★ 여기에 본인의 firebaseConfig를 붙여넣으세요 ★
+// ════════════════════════════════════════════════
+const firebaseConfig = {
+  apiKey: "AIzaSyBnYQYa5oVEbfc9TPWeOg1lmIqZltCFQC8",
+  authDomain: "reading-trainer-3c88d.firebaseapp.com",
+  projectId: "reading-trainer-3c88d",
+  storageBucket: "reading-trainer-3c88d.firebasestorage.app",
+  messagingSenderId: "676414434871",
+  appId: "1:676414434871:web:b4c5c8e10e65e8a17d19b2",
+  measurementId: "G-D7VSCJ7VPY"
+};
+// ════════════════════════════════════════════════
+
+const app  = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db   = getFirestore(app);
+
+// ═══════════════════════════════════════
+//  로컬 스토리지 (설정 전용)
+// ═══════════════════════════════════════
+const LS = {
+  get(k,d){try{const v=localStorage.getItem(k);return v!==null?JSON.parse(v):d}catch{return d}},
+  set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}}
+};
+
+// ═══════════════════════════════════════
+//  CONFIG  (설정은 로컬에만 저장)
+// ═══════════════════════════════════════
+const DCFG = {
+  provider:'openai',openaiKey:'',geminiKey:'',
+  openaiModel:'gpt-4.1-mini',geminiModel:'gemini-2.0-flash',
+  openaiModels:['gpt-4.1-mini','gpt-4.1','gpt-4o','gpt-4o-mini','o4-mini','gpt-4.5'],
+  geminiModels:['gemini-2.0-flash','gemini-2.5-flash','gemini-2.5-pro','gemini-1.5-flash'],
+  topic:'',count:15,charMin:30,charMax:80,extraPrompt:'',wbName:'',lastFolder:'',
+  streakUp:4,streakDown:4,speedStep:10,initSpeed:90,
+  speedMode:'adaptive',preFadeDelay:300,interDelay:800,
+  savedPrompts:[],
+};
+let CFG = {...DCFG,...LS.get('rfader_cfg',{})};
+function saveCfg(){LS.set('rfader_cfg',CFG)}
+
+// ═══════════════════════════════════════
+//  Firestore 경로 헬퍼
+//  로그인: users/{uid}/folders, users/{uid}/workbooks
+//  비로그인: anon/{anonId}/folders, anon/{anonId}/workbooks
+// ═══════════════════════════════════════
+let currentUid = null;  // 로그인 시 uid, 비로그인 시 null
+
+function getAnonId(){
+  let id = LS.get('rfader_anon','');
+  if(!id){id='anon_'+Math.random().toString(36).slice(2)+Date.now();LS.set('rfader_anon',id);}
+  return id;
+}
+
+function dbRoot(){
+  if(currentUid) return `users/${currentUid}`;
+  return `anon/${getAnonId()}`;
+}
+function foldersCol(){return collection(db, dbRoot()+'/folders')}
+function workbooksCol(){return collection(db, dbRoot()+'/workbooks')}
+function folderDoc(id){return doc(db, dbRoot()+'/folders/'+id)}
+function workbookDoc(id){return doc(db, dbRoot()+'/workbooks/'+id)}
+
+// ═══════════════════════════════════════
+//  동기화 상태 표시
+// ═══════════════════════════════════════
+function setSyncState(state){ // 'ok'|'busy'|'err'|'off'
+  const dot = document.getElementById('syncDot');
+  dot.className = 'sync-dot' + (state!=='off'?' '+state:'');
+}
+
+// ═══════════════════════════════════════
+//  라이브러리 (Firestore CRUD)
+//  folders: {id, name, order}
+//  workbooks: {id, folderId, name, topic, ts, data:[]}
+// ═══════════════════════════════════════
+let libCache = {folders:[], workbooks:[]};
+
+async function loadLib(){
+  setSyncState('busy');
+  try{
+    const [fsSnap, wbSnap] = await Promise.all([
+      getDocs(query(foldersCol(), orderBy('order','asc'))),
+      getDocs(query(workbooksCol(), orderBy('ts','desc')))
+    ]);
+    libCache.folders  = fsSnap.docs.map(d=>({id:d.id,...d.data()}));
+    libCache.workbooks= wbSnap.docs.map(d=>({id:d.id,...d.data()}));
+    // 기본 폴더 없으면 생성
+    if(!libCache.folders.length) await addFolder('기본 폴더');
+    setSyncState('ok');
+  }catch(e){setSyncState('err');console.error(e);}
+  renderLib();updateFolderSelects();renderFolderMgr();
+}
+
+function getLib(){return libCache;}
+
+async function addFolder(name){
+  const id='f'+Date.now();
+  const data={name, order: libCache.folders.length};
+  libCache.folders.push({id,...data});
+  setSyncState('busy');
+  await setDoc(folderDoc(id),data);
+  setSyncState('ok');
+  return id;
+}
+async function renameFolder(id,name){
+  libCache.folders = libCache.folders.map(f=>f.id===id?{...f,name}:f);
+  setSyncState('busy');
+  await updateDoc(folderDoc(id),{name});
+  setSyncState('ok');
+}
+async function deleteFolder(id){
+  libCache.folders  = libCache.folders.filter(f=>f.id!==id);
+  const toDelete = libCache.workbooks.filter(w=>w.folderId===id);
+  libCache.workbooks= libCache.workbooks.filter(w=>w.folderId!==id);
+  setSyncState('busy');
+  await deleteDoc(folderDoc(id));
+  await Promise.all(toDelete.map(w=>deleteDoc(workbookDoc(w.id))));
+  setSyncState('ok');
+}
+async function addWorkbook(wb){
+  libCache.workbooks.unshift(wb);
+  setSyncState('busy');
+  await setDoc(workbookDoc(wb.id), wb);
+  setSyncState('ok');
+}
+async function renameWorkbook(id,name){
+  libCache.workbooks = libCache.workbooks.map(w=>w.id===id?{...w,name}:w);
+  setSyncState('busy');
+  await updateDoc(workbookDoc(id),{name});
+  setSyncState('ok');
+}
+async function deleteWorkbook(id){
+  libCache.workbooks = libCache.workbooks.filter(w=>w.id!==id);
+  setSyncState('busy');
+  await deleteDoc(workbookDoc(id));
+  setSyncState('ok');
+}
+function getWorkbook(id){return libCache.workbooks.find(w=>w.id===id)}
+
+// ═══════════════════════════════════════
+//  AUTH
+// ═══════════════════════════════════════
+const provider = new GoogleAuthProvider();
+
+document.getElementById('authBtn').addEventListener('click', async()=>{
+  if(currentUid){
+    // 로그아웃
+    if(await confirmDel('로그아웃','비로그인 상태로 전환됩니다. 로컬 임시 저장소를 사용합니다.')){
+      await signOut(auth);
+    }
+  } else {
+    try{ await signInWithPopup(auth, provider); }
+    catch(e){ showToast('로그인 실패: '+e.message.slice(0,40),''); }
+  }
+});
+
+onAuthStateChanged(auth, async user=>{
+  if(user){
+    currentUid = user.uid;
+    document.getElementById('authInfo').innerHTML = `<span>${user.displayName||user.email}</span> 로그인됨`;
+    document.getElementById('authBtn').textContent = '로그아웃';
+    document.getElementById('authBtn').classList.remove('login');
+  } else {
+    currentUid = null;
+    document.getElementById('authInfo').textContent = '로그인하면 데이터가 클라우드에 저장됩니다';
+    document.getElementById('authBtn').textContent = 'Google 로그인';
+    document.getElementById('authBtn').classList.add('login');
+  }
+  await loadLib();
+});
+
+// ═══════════════════════════════════════
+//  SCREEN
+// ═══════════════════════════════════════
+function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active')}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
+// ═══════════════════════════════════════
+//  MODAL
+// ═══════════════════════════════════════
+let mRes=null;
+function openModal({title,desc='',input=false,inputDefault='',inputPlaceholder='',textarea=false,taDefault='',buttons}){
+  return new Promise(res=>{
+    mRes=res;
+    document.getElementById('mTitle').textContent=title;
+    const de=document.getElementById('mDesc');de.style.display=desc?'block':'none';de.textContent=desc;
+    const inp=document.getElementById('mInput');inp.style.display=input?'block':'none';
+    if(input){inp.value=inputDefault;inp.placeholder=inputPlaceholder;setTimeout(()=>inp.focus(),80);}
+    const ta=document.getElementById('mTextarea');ta.style.display=textarea?'block':'none';
+    if(textarea){ta.value=taDefault;setTimeout(()=>ta.focus(),80);}
+    const bb=document.getElementById('mBtns');
+    bb.innerHTML=buttons.map((b,i)=>`<button class="${b.cls||''}" data-mi="${i}">${b.label}</button>`).join('');
+    bb.querySelectorAll('button').forEach((btn,i)=>{
+      btn.addEventListener('click',()=>{
+        document.getElementById('modalBg').classList.remove('show');
+        if(mRes){
+          const v=input?document.getElementById('mInput').value.trim():textarea?document.getElementById('mTextarea').value.trim():null;
+          mRes({btn:buttons[i].value,val:v});mRes=null;
+        }
+      });
+    });
+    document.getElementById('modalBg').classList.add('show');
+  });
+}
+document.getElementById('mInput').addEventListener('keydown',e=>{if(e.key==='Enter')document.querySelector('#mBtns button:last-child')?.click()});
+document.getElementById('modalBg').addEventListener('click',e=>{
+  if(e.target===document.getElementById('modalBg')){
+    document.getElementById('modalBg').classList.remove('show');
+    if(mRes){mRes({btn:'cancel',val:null});mRes=null;}
+  }
+});
+async function confirmDel(name,sub=''){
+  const r=await openModal({title:`"${name}" 삭제`,desc:sub,
+    buttons:[{label:'취소',cls:'m-cancel',value:'cancel'},{label:'삭제',cls:'m-del',value:'ok'}]});
+  return r.btn==='ok';
+}
+async function promptName(title,def=''){
+  const r=await openModal({title,input:true,inputDefault:def,inputPlaceholder:'이름 입력',
+    buttons:[{label:'취소',cls:'m-cancel',value:'cancel'},{label:'확인',cls:'m-ok',value:'ok'}]});
+  return r.btn==='ok'?r.val:null;
+}
+
+// ═══════════════════════════════════════
+//  HOME NAV
+// ═══════════════════════════════════════
+document.querySelectorAll('.hnb').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('.hnb').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.htab').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    document.getElementById('tab-'+b.dataset.nav).classList.add('active');
+  });
+});
+
+// ═══════════════════════════════════════
+//  LIBRARY RENDER
+// ═══════════════════════════════════════
+function renderLib(){
+  const lib=getLib();
+  const root=document.getElementById('libRoot');
+  if(!lib.folders.length){root.innerHTML='<div class="es">폴더가 없습니다.</div>';return;}
+  root.innerHTML=lib.folders.map(folder=>{
+    const wbs=lib.workbooks.filter(w=>w.folderId===folder.id);
+    const wbHtml=wbs.length?wbs.map(wb=>`
+      <div class="wi" data-wb="${wb.id}">
+        <div class="wi-info">
+          <div class="wi-name">${esc(wb.name)}</div>
+          <div class="wi-meta">${wb.data.length}문장 · ${new Date(wb.ts).toLocaleDateString('ko')}</div>
+        </div>
+        <div class="wa">
+          <button class="wbtn" data-wr="${wb.id}">✏️</button>
+          <button class="wbtn del" data-wd="${wb.id}">🗑</button>
+          <button class="wbtn st" data-ws="${wb.id}">▶</button>
+        </div>
+      </div>`).join(''):'<div class="es" style="padding:8px 0">문제집 없음</div>';
+    return `
+      <div class="fs">
+        <div class="fhd" data-fid="${folder.id}">
+          <span class="fch open">▶</span><span style="font-size:13px">📁</span>
+          <span class="flb">${esc(folder.name)}</span>
+          <span class="fmeta">${wbs.length}개</span>
+          <button class="btn-ic" data-fr="${folder.id}" style="font-size:13px">✏️</button>
+          ${folder.id.startsWith('f')||folder.order>0?`<button class="btn-ic" data-fd="${folder.id}" style="font-size:13px">🗑</button>`:''}
+        </div>
+        <div class="fb open">${wbHtml}</div>
+      </div>`;
+  }).join('');
+
+  root.querySelectorAll('.fhd').forEach(h=>{
+    h.addEventListener('click',e=>{
+      if(e.target.closest('.btn-ic')||e.target.closest('.wa')) return;
+      h.nextElementSibling.classList.toggle('open');h.querySelector('.fch').classList.toggle('open');
+    });
+  });
+  root.querySelectorAll('[data-fr]').forEach(b=>b.addEventListener('click',async e=>{
+    e.stopPropagation();
+    const f=getLib().folders.find(f=>f.id===b.dataset.fr);
+    const n=await promptName('폴더 이름 변경',f?.name||'');
+    if(n){await renameFolder(b.dataset.fr,n);renderLib();updateFolderSelects();renderFolderMgr();}
+  }));
+  root.querySelectorAll('[data-fd]').forEach(b=>b.addEventListener('click',async e=>{
+    e.stopPropagation();
+    const cnt=getLib().workbooks.filter(w=>w.folderId===b.dataset.fd).length;
+    const f=getLib().folders.find(f=>f.id===b.dataset.fd);
+    if(await confirmDel(f?.name||'',cnt?`내부 문제집 ${cnt}개도 삭제됩니다.`:'')){
+      await deleteFolder(b.dataset.fd);renderLib();updateFolderSelects();renderFolderMgr();
+    }
+  }));
+  root.querySelectorAll('[data-wr]').forEach(b=>b.addEventListener('click',async e=>{
+    e.stopPropagation();
+    const wb=getWorkbook(b.dataset.wr);
+    const n=await promptName('문제집 이름 변경',wb?.name||'');
+    if(n){await renameWorkbook(b.dataset.wr,n);renderLib();}
+  }));
+  root.querySelectorAll('[data-wd]').forEach(b=>b.addEventListener('click',async e=>{
+    e.stopPropagation();
+    const wb=getWorkbook(b.dataset.wd);
+    if(await confirmDel(wb?.name||'이 문제집')){await deleteWorkbook(b.dataset.wd);renderLib();}
+  }));
+  root.querySelectorAll('.wi').forEach(el=>el.addEventListener('click',e=>{
+    if(e.target.closest('.wa')) return;openWbDetail(el.dataset.wb);
+  }));
+  root.querySelectorAll('[data-ws]').forEach(b=>b.addEventListener('click',e=>{
+    e.stopPropagation();const wb=getWorkbook(b.dataset.ws);if(wb) startTraining(wb.data);
+  }));
+}
+
+// ═══════════════════════════════════════
+//  WB DETAIL
+// ═══════════════════════════════════════
+let curWbId=null;
+function openWbDetail(id){
+  curWbId=id;const wb=getWorkbook(id);if(!wb) return;
+  document.getElementById('wbDetailTitle').textContent=wb.name;
+  document.getElementById('wbSentList').innerHTML=wb.data.map((item,i)=>`
+    <div class="sc"><div class="scn">#${i+1}</div>
+    <div class="sct">${esc(item.text)}</div>
+    <div class="scq">Q. ${esc(item.question)}</div></div>`).join('');
+  show('wbDetail');
+}
+document.getElementById('wbBackBtn').addEventListener('click',()=>{show('home');renderLib()});
+document.getElementById('wbRenameBtn').addEventListener('click',async()=>{
+  const wb=getWorkbook(curWbId);const n=await promptName('문제집 이름 변경',wb?.name||'');
+  if(n){await renameWorkbook(curWbId,n);document.getElementById('wbDetailTitle').textContent=n;}
+});
+document.getElementById('wbDeleteBtn').addEventListener('click',async()=>{
+  const wb=getWorkbook(curWbId);
+  if(await confirmDel(wb?.name||'이 문제집')){await deleteWorkbook(curWbId);show('home');renderLib();}
+});
+document.getElementById('wbStartBtn').addEventListener('click',()=>{
+  const wb=getWorkbook(curWbId);if(wb) startTraining(wb.data);
+});
+
+// ═══════════════════════════════════════
+//  IMPORT
+// ═══════════════════════════════════════
+let importedData=null;
+function updateImpFolderSelect(){
+  const sel=document.getElementById('impFolderSelect');
+  sel.innerHTML=getLib().folders.map(f=>`<option value="${f.id}">${esc(f.name)}</option>`).join('');
+}
+function validateImport(data){
+  if(!Array.isArray(data)||data.length===0) throw new Error('배열이 비어있거나 올바르지 않습니다');
+  return data.filter(item=>item.text&&item.question&&Array.isArray(item.options)&&item.options.length===4&&typeof item.answer==='number'&&item.answer>=0&&item.answer<=3);
+}
+function showImportPreview(data){
+  importedData=data;
+  document.getElementById('impPreviewCard').style.display='block';
+  document.getElementById('impPreview').innerHTML=`
+    <p style="font-size:13px;color:var(--dim);margin-bottom:8px">${data.length}개 지문 확인됨</p>
+    ${data.slice(0,3).map((item,i)=>`<div class="sc" style="margin-bottom:5px"><div class="scn">#${i+1}</div><div class="sct">${esc(item.text.slice(0,60))}${item.text.length>60?'…':''}</div></div>`).join('')}
+    ${data.length>3?`<p style="font-size:12px;color:var(--dim);text-align:center">외 ${data.length-3}개...</p>`:''}`;
+}
+document.getElementById('importFileBtn').addEventListener('click',()=>document.getElementById('fileInput').click());
+document.getElementById('fileInput').addEventListener('change',e=>{
+  const file=e.target.files[0];if(!file) return;
+  const reader=new FileReader();
+  reader.onload=ev=>{try{const d=validateImport(JSON.parse(ev.target.result));if(!d.length) throw new Error('유효한 지문 없음');showImportPreview(d);showToast(`${d.length}개 불러옴`,'up');}catch(err){showToast('오류: '+err.message,'');}};
+  reader.readAsText(file);e.target.value='';
+});
+document.getElementById('importPasteBtn').addEventListener('click',async()=>{
+  const r=await openModal({title:'JSON 붙여넣기',textarea:true,
+    buttons:[{label:'취소',cls:'m-cancel',value:'cancel'},{label:'불러오기',cls:'m-ok',value:'ok'}]});
+  if(r.btn==='ok'&&r.val){try{const d=validateImport(JSON.parse(r.val));if(!d.length) throw new Error('유효한 지문 없음');showImportPreview(d);showToast(`${d.length}개 불러옴`,'up');}catch(err){showToast('오류: '+err.message,'');}}
+});
+document.getElementById('impSaveBtn').addEventListener('click',async()=>{
+  if(!importedData) return;
+  const name=document.getElementById('impWbName').value.trim()||'불러온 문제집';
+  const folderId=document.getElementById('impFolderSelect').value||getLib().folders[0]?.id||'default';
+  const wb={id:'wb'+Date.now(),folderId,name,topic:'',ts:Date.now(),data:importedData};
+  await addWorkbook(wb);renderLib();
+  document.getElementById('impPreviewCard').style.display='none';importedData=null;
+  showToast('저장 완료','up');
+  document.querySelectorAll('.hnb').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.htab').forEach(t=>t.classList.remove('active'));
+  document.querySelector('[data-nav="lib"]').classList.add('active');
+  document.getElementById('tab-lib').classList.add('active');
+});
+
+// ═══════════════════════════════════════
+//  SAVED PROMPTS
+// ═══════════════════════════════════════
+document.getElementById('savePromptBtn').addEventListener('click',async()=>{
+  const text=document.getElementById('extraPrompt').value.trim();
+  if(!text){showToast('저장할 프롬프트를 입력하세요','');return;}
+  const r=await openModal({title:'프롬프트 이름 저장',input:true,inputPlaceholder:'프롬프트 이름',
+    buttons:[{label:'취소',cls:'m-cancel',value:'cancel'},{label:'저장',cls:'m-ok',value:'ok'}]});
+  if(r.btn==='ok'&&r.val){
+    const ex=CFG.savedPrompts.find(p=>p.name===r.val);
+    if(ex) ex.text=text; else CFG.savedPrompts.push({name:r.val,text});
+    saveCfg();showToast('프롬프트 저장됨','up');
+  }
+});
+document.getElementById('loadPromptBtn').addEventListener('click',async()=>{
+  if(!CFG.savedPrompts.length){showToast('저장된 프롬프트가 없습니다','');return;}
+  const r=await openModal({
+    title:'프롬프트 불러오기',desc:'불러올 프롬프트를 선택하세요',
+    buttons:[...CFG.savedPrompts.map(p=>({label:p.name,cls:'m-ok',value:'p:'+p.name})),{label:'취소',cls:'m-cancel',value:'cancel'}]
+  });
+  if(r.btn.startsWith('p:')){
+    const p=CFG.savedPrompts.find(p=>p.name===r.btn.slice(2));
+    if(p){document.getElementById('extraPrompt').value=p.text;CFG.extraPrompt=p.text;saveCfg();showToast(`"${p.name}" 불러옴`,'up');}
+  }
+});
+
+// ═══════════════════════════════════════
+//  SETTINGS
+// ═══════════════════════════════════════
+function initSettings(){
+  document.querySelectorAll('.nb').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const key=btn.dataset.cfg,d=parseInt(btn.dataset.d);
+      const min=parseInt(btn.dataset.min??0),max=parseInt(btn.dataset.max??9999);
+      CFG[key]=Math.max(min,Math.min(max,(CFG[key]??DCFG[key])+d));
+      const el=document.getElementById('val-'+key);if(el) el.textContent=CFG[key];
+      saveCfg();
+    });
+  });
+  document.querySelectorAll('[data-sm]').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      document.querySelectorAll('[data-sm]').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');CFG.speedMode=btn.dataset.sm;updateSpeedModeUI();saveCfg();
+    });
+  });
+  renderModelLists();
+  document.querySelectorAll('.ab[data-provider]').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const p=btn.dataset.provider;
+      const inp=document.getElementById('add'+p[0].toUpperCase()+p.slice(1)+'Model');
+      const v=inp.value.trim();if(!v) return;
+      const k=p+'Models';
+      if(!CFG[k].includes(v)){CFG[k].push(v);saveCfg();renderModelLists();updateModelSelect();}
+      inp.value='';
+    });
+  });
+  renderFolderMgr();
+  document.getElementById('addFolderBtn').addEventListener('click',async()=>{
+    const inp=document.getElementById('newFolderName');const n=inp.value.trim();if(!n) return;
+    await addFolder(n);inp.value='';renderFolderMgr();updateFolderSelects();renderLib();
+  });
+}
+function updateSpeedModeUI(){
+  const a=CFG.speedMode==='adaptive';
+  document.getElementById('adaptiveCard').style.display=a?'block':'none';
+  document.getElementById('speedModeDesc').textContent=a?'정답/오답 연속에 따라 자동으로 속도를 조절합니다':'훈련 중 버튼으로 직접 속도를 조절합니다';
+}
+function renderModelLists(){
+  ['openai','gemini'].forEach(p=>{
+    const el=document.getElementById(p+'ModelList');
+    const models=CFG[p+'Models'];
+    const def=p==='openai'?['gpt-4.1-mini','gpt-4.1','gpt-4o','gpt-4o-mini','o4-mini','gpt-4.5']:['gemini-2.0-flash','gemini-2.5-flash','gemini-2.5-pro','gemini-1.5-flash'];
+    el.innerHTML=models.map(m=>`<div class="mc"><span class="mc-n">${m}</span>${!def.includes(m)?`<button class="cb" data-p="${p}" data-m="${m}">✕</button>`:'<span style="color:var(--dim);font-size:10px">기본</span>'}</div>`).join('');
+    el.querySelectorAll('.cb').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        const k=btn.dataset.p+'Models';CFG[k]=CFG[k].filter(m=>m!==btn.dataset.m);
+        if(CFG[btn.dataset.p+'Model']===btn.dataset.m) CFG[btn.dataset.p+'Model']=CFG[k][0];
+        saveCfg();renderModelLists();updateModelSelect();
+      });
+    });
+  });
+}
+function renderFolderMgr(){
+  const el=document.getElementById('folderMgr');
+  el.innerHTML=getLib().folders.map(f=>`
+    <div class="mc" style="margin-bottom:6px">
+      <span class="mc-n">📁 ${esc(f.name)}</span>
+      <div style="display:flex;gap:4px">
+        <button class="cb" data-fmr="${f.id}" style="font-size:14px">✏️</button>
+        ${f.order>0||f.id.startsWith('f')?`<button class="cb" data-fmd="${f.id}">✕</button>`:'<span style="color:var(--dim);font-size:10px">기본</span>'}
+      </div>
+    </div>`).join('');
+  el.querySelectorAll('[data-fmr]').forEach(btn=>btn.addEventListener('click',async()=>{
+    const f=getLib().folders.find(f=>f.id===btn.dataset.fmr);
+    const n=await promptName('폴더 이름 변경',f?.name||'');
+    if(n){await renameFolder(btn.dataset.fmr,n);renderFolderMgr();updateFolderSelects();renderLib();}
+  }));
+  el.querySelectorAll('[data-fmd]').forEach(btn=>btn.addEventListener('click',async()=>{
+    const cnt=getLib().workbooks.filter(w=>w.folderId===btn.dataset.fmd).length;
+    const f=getLib().folders.find(f=>f.id===btn.dataset.fmd);
+    if(await confirmDel(f?.name||'',cnt?`내부 문제집 ${cnt}개도 삭제됩니다.`:'')){
+      await deleteFolder(btn.dataset.fmd);renderFolderMgr();updateFolderSelects();renderLib();
+    }
+  }));
+}
+
+// ═══════════════════════════════════════
+//  NEW SESSION UI
+// ═══════════════════════════════════════
+function initNewTab(){
+  document.querySelectorAll('[data-p]').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      document.querySelectorAll('[data-p]').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');CFG.provider=btn.dataset.p;saveCfg();updateModelSelect();updateApiKeyField();
+    });
+  });
+  ['topic','count','extraPrompt','wbName','charMin','charMax'].forEach(id=>{
+    const el=document.getElementById(id);if(el) el.addEventListener('input',()=>{CFG[id]=el.value;saveCfg();});
+  });
+  document.getElementById('apiKey').addEventListener('input',()=>{
+    const v=document.getElementById('apiKey').value;
+    if(CFG.provider==='openai') CFG.openaiKey=v; else CFG.geminiKey=v;saveCfg();
+  });
+  document.getElementById('modelSelect').addEventListener('change',()=>{
+    const v=document.getElementById('modelSelect').value;
+    if(CFG.provider==='openai') CFG.openaiModel=v; else CFG.geminiModel=v;saveCfg();
+  });
+  document.getElementById('folderSelect').addEventListener('change',()=>{CFG.lastFolder=document.getElementById('folderSelect').value;saveCfg();});
+}
+function updateModelSelect(){
+  const sel=document.getElementById('modelSelect'),models=CFG[CFG.provider+'Models'],cur=CFG[CFG.provider+'Model'];
+  sel.innerHTML=models.map(m=>`<option value="${m}"${m===cur?' selected':''}>${m}</option>`).join('');
+}
+function updateApiKeyField(){
+  const inp=document.getElementById('apiKey');
+  inp.value=CFG.provider==='openai'?(CFG.openaiKey||''):(CFG.geminiKey||'');
+  inp.placeholder=CFG.provider==='openai'?'sk-...':'AIza...';
+}
+function updateFolderSelects(){
+  const opts=getLib().folders.map(f=>`<option value="${f.id}"${f.id===CFG.lastFolder?' selected':''}>${esc(f.name)}</option>`).join('');
+  document.getElementById('folderSelect').innerHTML=opts;
+  document.getElementById('impFolderSelect').innerHTML=opts;
+}
+function restoreSettings(){
+  document.querySelectorAll('[data-p]').forEach(b=>b.classList.toggle('active',b.dataset.p===CFG.provider));
+  document.querySelectorAll('[data-sm]').forEach(b=>b.classList.toggle('active',b.dataset.sm===CFG.speedMode));
+  ['streakUp','streakDown','speedStep','initSpeed','preFadeDelay','interDelay'].forEach(k=>{
+    const el=document.getElementById('val-'+k);if(el) el.textContent=CFG[k];
+  });
+  document.getElementById('topic').value=CFG.topic||'';
+  document.getElementById('count').value=CFG.count||15;
+  document.getElementById('charMin').value=CFG.charMin||30;
+  document.getElementById('charMax').value=CFG.charMax||80;
+  document.getElementById('extraPrompt').value=CFG.extraPrompt||'';
+  document.getElementById('wbName').value=CFG.wbName||'';
+  updateModelSelect();updateApiKeyField();updateSpeedModeUI();
+}
+
+// ═══════════════════════════════════════
+//  AI GENERATION
+// ═══════════════════════════════════════
+document.getElementById('generateBtn').addEventListener('click',async()=>{
+  const apiKey=CFG.provider==='openai'?CFG.openaiKey:CFG.geminiKey;
+  if(!apiKey){showToast('API 키를 입력하세요','');return;}
+  const topic=CFG.topic||'일반 지식';
+  const count=Math.max(3,Math.min(50,parseInt(CFG.count)||15));
+  const cMin=parseInt(CFG.charMin)||30,cMax=parseInt(CFG.charMax)||80;
+  if(cMin>=cMax){showToast('최소 < 최대 글자 수여야 합니다','');return;}
+  const wbName=document.getElementById('wbName').value.trim()||`${topic} ${count}문`;
+  const folderId=document.getElementById('folderSelect').value||getLib().folders[0]?.id||'default';
+  show('loading');document.getElementById('loadDetail').textContent='API 요청 전송 중...';
+  try{
+    let raw;
+    if(CFG.provider==='openai') raw=await callOpenAI(CFG.openaiKey,buildPrompt(topic,count,cMin,cMax,CFG.extraPrompt));
+    else raw=await callGemini(CFG.geminiKey,buildPrompt(topic,count,cMin,cMax,CFG.extraPrompt));
+    document.getElementById('loadDetail').textContent='응답 파싱 중...';
+    const data=parseResp(raw);
+    if(!data||data.length===0) throw new Error('파싱 실패');
+    const wb={id:'wb'+Date.now(),folderId,name:wbName,topic,ts:Date.now(),data};
+    await addWorkbook(wb);renderLib();startTraining(data);
+  }catch(err){show('home');showToast('오류: '+err.message.slice(0,60),'');console.error(err);}
+});
+
+function buildPrompt(topic,count,cMin,cMax,extra){
+  const ep=extra?`\n추가 지시: ${extra}`:'';
+  return `주제 "${topic}"에 관한 한국어 읽기 훈련 지문 ${count}개를 생성하세요.\n각 지문은 ${cMin}~${cMax}자 사이여야 합니다.${ep}\n\n각 지문에 대해, 지문 내용만으로 답할 수 있는 객관식 질문 1개를 작성하세요.\n보기는 정확히 4개 (정답 1개, 오답 3개). 각 지문은 서로 다른 논점을 다루어야 합니다.\n\nJSON 배열만 출력 (마크다운 없이):\n[{"text":"지문","question":"질문?","options":["①","②","③","④"],"answer":0}]\nanswer는 0-기반 인덱스.`;
+}
+async function callOpenAI(key,prompt){
+  const body={model:CFG.openaiModel,messages:[{role:'user',content:prompt}],temperature:0.7,max_completion_tokens:8000};
+  const resp=await fetch('https://api.openai.com/v1/chat/completions',{
+    method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${key}`},body:JSON.stringify(body)});
+  if(!resp.ok){
+    const e=await resp.json().catch(()=>({}));
+    if(resp.status===400&&e?.error?.message?.includes('max_completion_tokens')){
+      const b2={...body};delete b2.max_completion_tokens;b2.max_tokens=8000;
+      const r2=await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${key}`},body:JSON.stringify(b2)});
+      if(!r2.ok){const e2=await r2.json().catch(()=>({}));throw new Error(`OpenAI ${r2.status}: ${e2?.error?.message||r2.statusText}`);}
+      return (await r2.json()).choices[0].message.content;
+    }
+    throw new Error(`OpenAI ${resp.status}: ${e?.error?.message||resp.statusText}`);
+  }
+  return (await resp.json()).choices[0].message.content;
+}
+async function callGemini(key,prompt){
+  const url=`https://generativelanguage.googleapis.com/v1beta/models/${CFG.geminiModel}:generateContent?key=${key}`;
+  const resp=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:0.7,maxOutputTokens:8000}})});
+  if(!resp.ok){const e=await resp.json().catch(()=>({}));throw new Error(`Gemini ${resp.status}: ${e?.error?.message||resp.statusText}`);}
+  return (await resp.json()).candidates[0].content.parts[0].text;
+}
+function parseResp(raw){
+  let text=raw.replace(/```json\s*/gi,'').replace(/```\s*/g,'').trim();
+  const s=text.indexOf('['),e=text.lastIndexOf(']');
+  if(s===-1||e===-1) throw new Error('JSON 배열을 찾을 수 없습니다');
+  const data=JSON.parse(text.slice(s,e+1));
+  return data.filter(item=>item.text&&item.question&&Array.isArray(item.options)&&item.options.length===4&&typeof item.answer==='number'&&item.answer>=0&&item.answer<=3);
+}
+
+// ═══════════════════════════════════════
+//  TRAINING
+// ═══════════════════════════════════════
+const SPEED_MIN=20,SPEED_MAX=400;
+let trainingData=[],curIdx=0,msPerChar=90,initMsPerChar=90;
+let correctCnt=0,answeredCnt=0,streak=0;
+let fadingTimer=null,delayTimer=null;
+
+function startTraining(data){
+  trainingData=data;curIdx=0;correctCnt=0;answeredCnt=0;streak=0;
+  msPerChar=CFG.initSpeed;initMsPerChar=CFG.initSpeed;
+  document.getElementById('manualSpeedRow').style.display=CFG.speedMode==='manual'?'flex':'none';
+  updateSpdDisplay();show('training');enterDelay();
+}
+function updateSpdDisplay(){
+  document.getElementById('trSpd').textContent=msPerChar;
+  document.getElementById('spdDisplay').textContent=msPerChar+'ms';
+}
+document.getElementById('spdFaster').addEventListener('click',()=>{
+  msPerChar=Math.max(SPEED_MIN,Math.round(msPerChar*(1-CFG.speedStep/100)));updateSpdDisplay();showToast(`↑ 빠르게 → ${msPerChar}ms`,'up');
+});
+document.getElementById('spdSlower').addEventListener('click',()=>{
+  msPerChar=Math.min(SPEED_MAX,Math.round(msPerChar*(1+CFG.speedStep/100)));updateSpdDisplay();showToast(`↓ 느리게 → ${msPerChar}ms`,'dn');
+});
+function enterDelay(){
+  clearFading();clearDelayTimer();
+  document.getElementById('sentText').innerHTML='';document.getElementById('nextBtn').disabled=true;
+  const ul=document.getElementById('sentUl');ul.style.width='60%';ul.className='ul waiting';
+  document.getElementById('delayDot').classList.add('show');
+  delayTimer=setTimeout(()=>{document.getElementById('delayDot').classList.remove('show');loadSent();},CFG.interDelay);
+}
+function loadSent(){
+  if(curIdx>=trainingData.length){showResult();return;}
+  const item=trainingData[curIdx],chars=item.text.split('');
+  document.getElementById('trIdx').textContent=curIdx+1;
+  document.getElementById('trTotal').textContent=trainingData.length;
+  document.getElementById('trAcc').textContent=answeredCnt?Math.round(correctCnt/answeredCnt*100):'-';
+  updateSpdDisplay();
+  document.getElementById('progFill').style.width=(curIdx/trainingData.length*100)+'%';
+  if(CFG.speedMode==='adaptive'){
+    const t=Math.max(CFG.streakUp,CFG.streakDown);
+    document.getElementById('streakDots').innerHTML=Array.from({length:t},(_,i)=>{
+      let c='';if(streak>0&&i<streak)c='hit';else if(streak<0&&i<Math.abs(streak))c='miss';
+      return `<div class="sdot ${c}"></div>`;}).join('');
+  } else document.getElementById('streakDots').innerHTML='';
+
+  const el=document.getElementById('sentText');
+  el.innerHTML=chars.map((c,i)=>`<span class="tok" id="t${i}">${c===' '?'&nbsp;':esc(c)}</span>`).join('');
+  const ul=document.getElementById('sentUl');ul.className='ul';
+  requestAnimationFrame(()=>{ul.style.width=el.offsetWidth+'px';ul.className='ul active';});
+  document.getElementById('nextBtn').disabled=false;
+  clearFading();clearDelayTimer();
+  delayTimer=setTimeout(()=>startFading(chars.length),CFG.preFadeDelay);
+}
+function startFading(n){
+  let i=0;fadingTimer=setInterval(()=>{
+    if(i>0){const p=document.getElementById(`t${i-1}`);if(p){p.classList.remove('going');p.classList.add('gone');}}
+    if(i<n){const c=document.getElementById(`t${i}`);if(c) c.classList.add('going');i++;}
+    else clearFading();
+  },msPerChar);
+}
+function clearFading(){if(fadingTimer){clearInterval(fadingTimer);fadingTimer=null;}}
+function clearDelayTimer(){if(delayTimer){clearTimeout(delayTimer);delayTimer=null;}}
+
+document.getElementById('nextBtn').addEventListener('click',()=>{clearFading();clearDelayTimer();showQ();});
+document.getElementById('exitBtn').addEventListener('click',showResult);
+
+function showQ(){
+  const item=trainingData[curIdx];
+  document.getElementById('qSentRef').textContent=`"${item.text}"`;
+  document.getElementById('qText').textContent=item.question;
+  document.getElementById('qFeedback').className='qfb';document.getElementById('qNextBtn').className='qnb';
+  document.getElementById('skipBtn').disabled=false;
+  [0,1,2,3].forEach(i=>{
+    const btn=document.getElementById(`opt${i}`);
+    btn.textContent=item.options[i];btn.className='ob';btn.disabled=false;
+    btn.onclick=()=>handleAns(i,item.answer,false);
+  });
+  show('question');
+}
+document.getElementById('skipBtn').addEventListener('click',()=>handleAns(-1,trainingData[curIdx]?.answer,true));
+function handleAns(chosen,correct,isSkip){
+  const ok=!isSkip&&chosen===correct;
+  [0,1,2,3].forEach(i=>{const btn=document.getElementById(`opt${i}`);btn.disabled=true;if(i===correct)btn.classList.add('correct');else if(i===chosen&&!ok&&!isSkip)btn.classList.add('wrong');});
+  document.getElementById('skipBtn').disabled=true;
+  answeredCnt++;if(ok) correctCnt++;
+  const fb=document.getElementById('qFeedback');
+  if(isSkip){fb.textContent=`모름 — 정답: ${trainingData[curIdx].options[correct]}`;fb.className='qfb show sk';}
+  else if(ok){fb.textContent='✓ 정답입니다!';fb.className='qfb show ok';}
+  else{fb.textContent=`✗ 정답: ${trainingData[curIdx].options[correct]}`;fb.className='qfb show ng';}
+  if(CFG.speedMode==='adaptive') adaptSpeed(ok,isSkip);
+  document.getElementById('qNextBtn').className='qnb show';
+}
+function adaptSpeed(ok,isSkip){
+  const correct=ok&&!isSkip;
+  if(correct){streak=streak>=0?streak+1:1;}else{streak=streak<=0?streak-1:-1;}
+  if(streak>=CFG.streakUp){const n=Math.max(SPEED_MIN,Math.round(msPerChar*(1-CFG.speedStep/100)));if(n<msPerChar){msPerChar=n;updateSpdDisplay();showToast(`⚡ ${CFG.streakUp}연속 → ${msPerChar}ms`,'up');}streak=0;}
+  if(streak<=-CFG.streakDown){const n=Math.min(SPEED_MAX,Math.round(msPerChar*(1+CFG.speedStep/100)));if(n>msPerChar){msPerChar=n;updateSpdDisplay();showToast(`↓ ${CFG.streakDown}연속 오답 → ${msPerChar}ms`,'dn');}streak=0;}
+}
+document.getElementById('qNextBtn').addEventListener('click',()=>{curIdx++;show('training');enterDelay();});
+
+function showResult(){
+  clearFading();clearDelayTimer();
+  const acc=answeredCnt?Math.round(correctCnt/answeredCnt*100):0;
+  const diff=msPerChar-initMsPerChar;
+  document.getElementById('rSent').textContent=curIdx;document.getElementById('rAcc').textContent=acc+'%';
+  document.getElementById('rSpeed').textContent=msPerChar+'ms';
+  document.getElementById('rChange').textContent=diff<0?`${diff}ms ↑빠름`:diff>0?`+${diff}ms ↓느림`:'유지';
+  document.getElementById('rEmoji').textContent=acc>=80?'🏆':acc>=60?'✦':'💪';
+  show('result');
+}
+document.getElementById('retryBtn').addEventListener('click',()=>startTraining(trainingData));
+document.getElementById('homeBtn').addEventListener('click',()=>{clearFading();clearDelayTimer();show('home');renderLib();});
+
+// ═══════════════════════════════════════
+//  TOAST
+// ═══════════════════════════════════════
+let tTimer=null;
+function showToast(msg,type){
+  const el=document.getElementById('toast');el.textContent=msg;el.className='toast show '+(type||'');
+  if(tTimer) clearTimeout(tTimer);tTimer=setTimeout(()=>el.classList.remove('show'),2200);
+}
+
+// ═══════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════
+window.addEventListener('DOMContentLoaded',()=>{
+  initSettings();initNewTab();restoreSettings();
+  // loadLib()는 onAuthStateChanged에서 자동 호출됨
+});
+</script>
+</body>
+</html>
