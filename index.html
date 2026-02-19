@@ -198,12 +198,44 @@ select{appearance:none;cursor:pointer}
 .subj-submit{width:100%;background:var(--ac);color:#fff;border:none;padding:12px;border-radius:10px;
   font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:700;cursor:pointer;touch-action:manipulation}
 .subj-submit:disabled{opacity:.4;cursor:default}
-/* 정답 공개 (주관식) */
+/* 모범 답안 */
 .subj-reveal{width:100%;max-width:540px;background:var(--sf2);border:1px solid var(--bd);
   border-radius:10px;padding:12px 14px;font-size:14px;text-align:center;color:var(--dim);
-  display:none;line-height:1.5}
+  display:none;line-height:1.6}
 .subj-reveal.show{display:block}
-.subj-reveal strong{color:var(--ac)}
+.subj-reveal strong{color:var(--ac);font-size:16px}
+/* 자가 채점 UI */
+.score-wrap{width:100%;max-width:540px;display:none;flex-direction:column;align-items:center;gap:10px}
+.score-wrap.show{display:flex}
+.score-label{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--dim);text-transform:uppercase}
+.score-btns{display:flex;gap:6px;width:100%}
+.sc-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;
+  padding:12px 4px 10px;border-radius:12px;border:2px solid var(--bd);
+  background:var(--sf);cursor:pointer;transition:all .18s;touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;min-height:64px}
+.sc-btn:hover{border-color:var(--ac);transform:translateY(-2px)}
+.sc-btn:active{transform:translateY(0) scale(.96)}
+.sc-btn .sc-num{font-family:'IBM Plex Mono',monospace;font-size:17px;font-weight:700;line-height:1;color:var(--dim)}
+.sc-btn .sc-pip{display:flex;gap:2px;flex-wrap:wrap;justify-content:center;min-height:10px}
+.sc-pip-dot{width:5px;height:5px;border-radius:50%;background:var(--bd)}
+.sc-btn[data-sc="0"] .sc-num{color:var(--red)}.sc-btn[data-sc="0"]:hover{border-color:var(--red)}
+.sc-btn[data-sc="0"].chosen{background:rgba(248,113,113,.1);border-color:var(--red)}
+.sc-btn[data-sc="0"].chosen .sc-pip-dot{background:var(--red)}
+.sc-btn[data-sc="1"] .sc-num{color:#fb923c}.sc-btn[data-sc="1"]:hover{border-color:#fb923c}
+.sc-btn[data-sc="1"].chosen{background:rgba(251,146,60,.1);border-color:#fb923c}
+.sc-btn[data-sc="1"].chosen .sc-pip-dot{background:#fb923c}
+.sc-btn[data-sc="2"] .sc-num{color:var(--yellow)}.sc-btn[data-sc="2"]:hover{border-color:var(--yellow)}
+.sc-btn[data-sc="2"].chosen{background:rgba(251,191,36,.1);border-color:var(--yellow)}
+.sc-btn[data-sc="2"].chosen .sc-pip-dot{background:var(--yellow)}
+.sc-btn[data-sc="3"] .sc-num{color:#86efac}.sc-btn[data-sc="3"]:hover{border-color:#86efac}
+.sc-btn[data-sc="3"].chosen{background:rgba(134,239,172,.1);border-color:#86efac}
+.sc-btn[data-sc="3"].chosen .sc-pip-dot{background:#86efac}
+.sc-btn[data-sc="4"] .sc-num{color:var(--green)}.sc-btn[data-sc="4"]:hover{border-color:var(--green)}
+.sc-btn[data-sc="4"].chosen{background:rgba(110,231,183,.1);border-color:var(--green)}
+.sc-btn[data-sc="4"].chosen .sc-pip-dot{background:var(--green)}
+.sc-btn[data-sc="5"] .sc-num{color:var(--ac)}.sc-btn[data-sc="5"]:hover{border-color:var(--ac)}
+.sc-btn[data-sc="5"].chosen{background:rgba(167,139,250,.12);border-color:var(--ac)}
+.sc-btn[data-sc="5"].chosen .sc-pip-dot{background:var(--ac)}
 /* skip/feedback */
 .skip-wrap{width:100%;max-width:540px}
 .skip-btn{width:100%;background:none;border:1.5px solid var(--bd);color:var(--dim);
@@ -344,8 +376,7 @@ select{appearance:none;cursor:pointer}
   "text": "지문 내용",
   "question": "질문?",
   "type": "short",
-  "answer": "정답 텍스트",
-  "keywords": ["핵심어1","핵심어2"]
+  "answer": "모범 답안 텍스트"
 }]</pre>
       <div class="fw"><div class="fl">폴더</div><select id="impFolderSelect"></select></div>
       <div class="fw"><div class="fl">문제집 이름</div><input type="text" id="impWbName" placeholder="불러온 문제집 이름"></div>
@@ -483,6 +514,10 @@ select{appearance:none;cursor:pointer}
       <input class="subj-input" id="subjInput" type="text" placeholder="답을 입력하세요" autocomplete="off">
       <button class="subj-submit" id="subjSubmit">제출</button>
       <div class="subj-reveal" id="subjReveal"></div>
+      <div class="score-wrap" id="scoreWrap">
+        <div class="score-label">내 답 채점하기</div>
+        <div class="score-btns" id="scoreBtns"></div>
+      </div>
     </div>
     <div class="skip-wrap"><button class="skip-btn" id="skipBtn">모름 / 건너뜀</button></div>
     <div class="qfb" id="qFeedback"></div>
@@ -523,27 +558,10 @@ import{getAuth,GoogleAuthProvider,signInWithPopup,signOut,onAuthStateChanged}fro
 import{getFirestore,collection,doc,getDocs,setDoc,deleteDoc,updateDoc,query,orderBy}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
 // ════════════════════════════════════════════
-//  ★ firebaseConfig를 여기에 붙여넣으세요 ★
+//  Firebase 설정을 외부 파일에서 불러옵니다.
+//  같은 폴더에 firebase-config.js 가 있어야 합니다.
 // ════════════════════════════════════════════
-const firebaseConfig={
-  apiKey: "AIzaSyBnYQYa5oVEbfc9TPWeOg1lmIqZltCFQC8",
-
-  authDomain: "reading-trainer-3c88d.firebaseapp.com",
-
-  projectId: "reading-trainer-3c88d",
-
-  storageBucket: "reading-trainer-3c88d.firebasestorage.app",
-
-  messagingSenderId: "676414434871",
-
-  appId: "1:676414434871:web:b4c5c8e10e65e8a17d19b2",
-
-  measurementId: "G-D7VSCJ7VPY"
-};
-
-
-
-
+import{firebaseConfig}from'./firebase-config.js';
 // ════════════════════════════════════════════
 
 const app=initializeApp(firebaseConfig);
@@ -922,7 +940,7 @@ function validateImport(data){
   if(!Array.isArray(data)||!data.length) throw new Error('배열이 비어있거나 올바르지 않습니다');
   return data.filter(item=>{
     if(!item.text||!item.question) return false;
-    if(item.type==='short') return typeof item.answer==='string';
+    if(item.type==='short') return typeof item.answer==='string'&&item.answer.length>0;
     return Array.isArray(item.options)&&item.options.length===4&&typeof item.answer==='number'&&item.answer>=0&&item.answer<=3;
   });
 }
@@ -1168,6 +1186,7 @@ function parseResp(raw){
 const SPEED_MIN=20,SPEED_MAX=400;
 let trainingData=[],curIdx=0,msPerChar=90,initMsPerChar=90;
 let correctCnt=0,answeredCnt=0,streak=0;
+let shortScoreTotal=0,shortScoreMax=0; // 주관식 자가채점 누적
 let fadingTimer=null,delayTimer=null;
 let currentWbId=null;
 
@@ -1175,6 +1194,7 @@ function startTraining(data,wbId,startIdx,startSpd,cor,ans){
   trainingData=data;curIdx=startIdx;currentWbId=wbId||null;
   msPerChar=startSpd||CFG.initSpeed;initMsPerChar=CFG.initSpeed;
   correctCnt=cor||0;answeredCnt=ans||0;streak=0;
+  shortScoreTotal=0;shortScoreMax=0;
   document.getElementById('manualSpeedRow').style.display=CFG.speedMode==='manual'?'flex':'none';
   updateSpdDisplay();show('training');enterDelay();
 }
@@ -1253,6 +1273,8 @@ function showQ(){
     document.getElementById('subjSubmit').disabled=false;
     document.getElementById('subjReveal').className='subj-reveal';
     document.getElementById('subjReveal').innerHTML='';
+    document.getElementById('scoreWrap').className='score-wrap'; // 채점 UI 숨김
+    document.getElementById('scoreBtns').innerHTML='';
     setTimeout(()=>inp.focus(),100);
   }else{
     [0,1,2,3].forEach(i=>{
@@ -1269,37 +1291,58 @@ document.getElementById('subjSubmit').addEventListener('click',()=>{
   const item=trainingData[curIdx];
   const userAns=document.getElementById('subjInput').value.trim();
   if(!userAns) return;
-  handleShortAns(userAns,item);
+  revealShortAnswer(item);
 });
 document.getElementById('subjInput').addEventListener('keydown',e=>{
   if(e.key==='Enter'){document.getElementById('subjSubmit').click();}
 });
 
-function normalizeKo(s){return s.trim().replace(/\s+/g,' ').toLowerCase();}
-function checkShortAnswer(userAns,item){
-  const u=normalizeKo(userAns),a=normalizeKo(item.answer);
-  if(u===a) return true;
-  // keywords 중 하나라도 포함하면 정답
-  if(Array.isArray(item.keywords)&&item.keywords.length){
-    return item.keywords.some(k=>u.includes(normalizeKo(k)));
-  }
-  return false;
-}
-
-function handleShortAns(userAns,item){
-  const ok=checkShortAnswer(userAns,item);
+// 제출 후 모범 답안 공개 + 채점 UI 표시
+function revealShortAnswer(item){
   document.getElementById('subjInput').disabled=true;
   document.getElementById('subjSubmit').disabled=true;
+  document.getElementById('skipBtn').disabled=true;
+
+  // 모범 답안 표시
   const reveal=document.getElementById('subjReveal');
-  reveal.innerHTML=`모범 답안: <strong>${esc(item.answer)}</strong>`;
+  reveal.innerHTML=`모범 답안<br><strong>${esc(item.answer)}</strong>`;
   reveal.className='subj-reveal show';
 
-  answeredCnt++;if(ok)correctCnt++;
+  // 채점 버튼 생성 (0~5)
+  const scoreBtns=document.getElementById('scoreBtns');
+  scoreBtns.innerHTML='';
+  const SCORE_COLORS=['var(--red)','#fb923c','var(--yellow)','#86efac','var(--green)','var(--ac)'];
+  for(let s=0;s<=5;s++){
+    const btn=document.createElement('button');
+    btn.className='sc-btn';
+    btn.dataset.sc=s;
+    // 점 배열 (s개)
+    const pips=s>0?Array.from({length:s},()=>`<div class="sc-pip-dot"></div>`).join(''):'';
+    btn.innerHTML=`<span class="sc-num">${s}</span><div class="sc-pip">${pips}</div>`;
+    btn.addEventListener('click',()=>handleSelfScore(s,item));
+    scoreBtns.appendChild(btn);
+  }
+  document.getElementById('scoreWrap').className='score-wrap show';
+}
+
+// 자가 채점 처리: 점수 0~5
+function handleSelfScore(score,item){
+  // 버튼 시각 업데이트
+  document.querySelectorAll('.sc-btn').forEach(b=>{
+    b.classList.toggle('chosen',parseInt(b.dataset.sc)===score);
+    b.style.pointerEvents='none';
+  });
+
+  answeredCnt++;
+  shortScoreTotal+=score;  // 0~5 누적
+  shortScoreMax+=5;        // 최대 가능 점수
+
   const fb=document.getElementById('qFeedback');
-  if(ok){fb.textContent='✓ 정답입니다!';fb.className='qfb show ok';}
-  else{fb.textContent=`✗ 오답`;fb.className='qfb show ng';}
-  document.getElementById('skipBtn').disabled=true;
-  if(CFG.speedMode==='adaptive')adaptSpeed(ok,false);
+  const grade=score===5?'✓ 완벽!':score===0?'✗ 0점':`${score}/5점`;
+  const cls=score>=4?'ok':score>=2?'sk':'ng';
+  fb.textContent=grade;fb.className=`qfb show ${cls}`;
+
+  if(CFG.speedMode==='adaptive')adaptSpeed(score>=3,false);
   document.getElementById('qNextBtn').className='qnb show';
 }
 
@@ -1319,19 +1362,28 @@ document.getElementById('skipBtn').addEventListener('click',()=>{
   const item=trainingData[curIdx];
   const isShort=item.type==='short';
   if(isShort){
-    document.getElementById('subjInput').disabled=true;document.getElementById('subjSubmit').disabled=true;
+    // 주관식 모름: 모범 답안 표시 후 0점 채점
+    document.getElementById('subjInput').disabled=true;
+    document.getElementById('subjSubmit').disabled=true;
     const reveal=document.getElementById('subjReveal');
-    reveal.innerHTML=`모범 답안: <strong>${esc(item.answer)}</strong>`;reveal.className='subj-reveal show';
+    reveal.innerHTML=`모범 답안<br><strong>${esc(item.answer)}</strong>`;
+    reveal.className='subj-reveal show';
+    document.getElementById('skipBtn').disabled=true;
+    answeredCnt++; // 점수 0 (correctCnt 증가 없음)
+    const fb=document.getElementById('qFeedback');
+    fb.textContent='모름 — 0점';fb.className='qfb show sk';
+    if(CFG.speedMode==='adaptive')adaptSpeed(false,true);
+    document.getElementById('qNextBtn').className='qnb show';
   }else{
     [0,1,2,3].forEach(i=>{const btn=document.getElementById(`opt${i}`);btn.disabled=true;if(i===item.answer)btn.classList.add('correct');});
+    document.getElementById('skipBtn').disabled=true;
+    answeredCnt++;
+    const fb=document.getElementById('qFeedback');
+    fb.textContent=`모름 — 정답: ${item.options[item.answer]}`;
+    fb.className='qfb show sk';
+    if(CFG.speedMode==='adaptive')adaptSpeed(false,true);
+    document.getElementById('qNextBtn').className='qnb show';
   }
-  document.getElementById('skipBtn').disabled=true;
-  answeredCnt++;
-  const fb=document.getElementById('qFeedback');
-  fb.textContent=isShort?`모름 — 답: ${item.answer}`:`모름 — 정답: ${item.options[item.answer]}`;
-  fb.className='qfb show sk';
-  if(CFG.speedMode==='adaptive')adaptSpeed(false,true);
-  document.getElementById('qNextBtn').className='qnb show';
 });
 
 function adaptSpeed(ok,isSkip){
@@ -1352,7 +1404,16 @@ document.getElementById('qNextBtn').addEventListener('click',()=>{
 function showResult(){
   clearFading();clearDelayTimer();
   if(currentWbId&&curIdx>=trainingData.length) clearProgress(currentWbId);
-  const acc=answeredCnt?Math.round(correctCnt/answeredCnt*100):0;
+  // MCQ: correctCnt/MCQ answered. Short: shortScoreTotal/shortScoreMax
+  // 통합 정답률: (MCQ 정답 + 주관식 비율*MCQ환산) 으로 단순 평균
+  const mcqAns=answeredCnt-shortScoreMax/5; // MCQ 답변 수
+  const mcqPts=correctCnt;
+  const shortPct=shortScoreMax>0?shortScoreTotal/shortScoreMax:null;
+  const mcqPct=mcqAns>0?mcqPts/mcqAns:null;
+  let acc=0;
+  if(shortPct!==null&&mcqPct!==null) acc=Math.round((shortPct+mcqPct)/2*100);
+  else if(shortPct!==null) acc=Math.round(shortPct*100);
+  else if(mcqPct!==null) acc=Math.round(mcqPct*100);
   const diff=msPerChar-initMsPerChar;
   document.getElementById('rSent').textContent=curIdx;
   document.getElementById('rAcc').textContent=acc+'%';
